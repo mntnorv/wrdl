@@ -11,13 +11,17 @@ import java.util.ArrayList;
 
 public class TileGridView extends View {
 
-    private Paint mTextNormalPaint;
-    private Paint mTextSelectedPaint;
+    private Paint mTextPaint;
+    private Paint mCirclePaint;
 
     private float[] mTextXOffsets;
     private float[] mTextYOffsets;
     private String[] mTileStrings;
     private boolean[] mTilesSelected;
+
+    private float[] mCircleXOffsets;
+    private float[] mCircleYOffsets;
+    private float mCircleRadius;
 
     private int sizeInTiles;
     private float tileSize;
@@ -38,13 +42,12 @@ public class TileGridView extends View {
     }
 
     private void init() {
-        mTextNormalPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-        mTextNormalPaint.setColor(0xFF000000);
-        mTextNormalPaint.setTextSize(12);
+        mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+        mTextPaint.setColor(0xFF000000);
+        mTextPaint.setTextSize(12);
 
-        mTextSelectedPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-        mTextSelectedPaint.setColor(0xFFFF0000);
-        mTextSelectedPaint.setTextSize(12);
+        mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mCirclePaint.setColor(0xFFFF0000);
 
         mTileStrings = new String[] {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"};
         sizeInTiles = (int) Math.sqrt(mTileStrings.length);
@@ -90,31 +93,49 @@ public class TileGridView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        // Draw selection circles
         for (int i = 0; i < mTileStrings.length; i++) {
-            if (!mTilesSelected[i]) {
-                canvas.drawText(mTileStrings[i], mTextXOffsets[i], mTextYOffsets[i], mTextNormalPaint);
-            } else {
-                canvas.drawText(mTileStrings[i], mTextXOffsets[i], mTextYOffsets[i], mTextSelectedPaint);
+            if (mTilesSelected[i]) {
+                canvas.drawCircle(mCircleXOffsets[i], mCircleYOffsets[i], mCircleRadius, mCirclePaint);
             }
+        }
+
+        // Draw text
+        for (int i = 0; i < mTileStrings.length; i++) {
+            canvas.drawText(mTileStrings[i], mTextXOffsets[i], mTextYOffsets[i], mTextPaint);
         }
     }
 
     private void updateDrawableProperties() {
         touchListener.initialize(getWidth(), getHeight(), sizeInTiles, sizeInTiles);
 
-        mTextNormalPaint.setTextSize(tileSize * 0.3f);
-        mTextSelectedPaint.setTextSize(tileSize * 0.3f);
+        mTextPaint.setTextSize(tileSize * 0.3f);
 
         mTextXOffsets = new float[mTileStrings.length];
         mTextYOffsets = new float[mTileStrings.length];
         mTilesSelected = new boolean[mTileStrings.length];
 
+        mCircleRadius = tileSize * 0.8f / 2;
+        mCircleXOffsets = new float[mTileStrings.length];
+        mCircleYOffsets = new float[mTileStrings.length];
+
         Rect textBounds = new Rect();
+        float baseXOffset;
+        float baseYOffset;
+
         for (int i = 0; i < mTileStrings.length; i++) {
+            baseXOffset = tileSize * (i % sizeInTiles);
+            baseYOffset = tileSize * (i / sizeInTiles);
+
+            // Update text properties
             mTilesSelected[i] = false;
-            mTextNormalPaint.getTextBounds(mTileStrings[i], 0, mTileStrings[i].length(), textBounds);
-            mTextXOffsets[i] = tileSize * (i % sizeInTiles) + (tileSize - textBounds.right) / 2;
-            mTextYOffsets[i] = tileSize * (i / sizeInTiles) + (tileSize / 2);
+            mTextPaint.getTextBounds(mTileStrings[i], 0, mTileStrings[i].length(), textBounds);
+            mTextXOffsets[i] = baseXOffset + (tileSize - textBounds.right) / 2;
+            mTextYOffsets[i] = baseYOffset + (tileSize + textBounds.bottom - textBounds.top) / 2;
+
+            // Update circle properties
+            mCircleXOffsets[i] = baseXOffset + tileSize / 2;
+            mCircleYOffsets[i] = baseYOffset + tileSize / 2;
         }
     }
 
