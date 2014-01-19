@@ -113,7 +113,7 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
                         sequenceChanged = true;
                     }
                 }
-            } else {
+            } else if (event.getAction() == MotionEvent.ACTION_UP) {
                 selected.clear();
                 sequenceChanged = true;
             }
