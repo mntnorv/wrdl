@@ -21,6 +21,7 @@ public class TileGridView extends View {
 
     private Paint mTextPaint;
     private Paint mCirclePaint;
+    private Paint mShadowPaint;
 
     private float[] mTextXOffsets;
     private float[] mTextYOffsets;
@@ -30,6 +31,8 @@ public class TileGridView extends View {
     private float[] mCircleXOffsets;
     private float[] mCircleYOffsets;
     private float mCircleRadius;
+
+    private float mShadowOffset;
 
     private int sizeInTiles;
     private float tileSize;
@@ -58,8 +61,8 @@ public class TileGridView extends View {
         mShadowColor = DEFAULT_SHADOW_COLOR;
         mHandleTouch = DEFAULT_HANDLE_TOUCH_VALUE;
 
-        mTileStrings = new String[] {"Empty"};
-        sizeInTiles = 1;
+        mTileStrings = new String[] {"A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"};
+        sizeInTiles = 4;
     }
 
     private void parseAttributes(Context context, AttributeSet attrs) {
@@ -85,6 +88,9 @@ public class TileGridView extends View {
 
         mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCirclePaint.setColor(mTileColor);
+
+        mShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mShadowPaint.setColor(mShadowColor);
 
         if (mHandleTouch) {
             setOnTouchListener(touchListener);
@@ -136,6 +142,16 @@ public class TileGridView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        // Draw selection circle shadows
+        canvas.save();
+        canvas.translate(mShadowOffset, mShadowOffset);
+        for (int i = 0; i < mTileStrings.length; i++) {
+            if (mTilesSelected[i]) {
+                canvas.drawCircle(mCircleXOffsets[i], mCircleYOffsets[i], mCircleRadius, mShadowPaint);
+            }
+        }
+        canvas.restore();
+
         // Draw selection circles
         for (int i = 0; i < mTileStrings.length; i++) {
             if (mTilesSelected[i]) {
@@ -161,6 +177,8 @@ public class TileGridView extends View {
         mCircleRadius = tileSize * 0.8f / 2;
         mCircleXOffsets = new float[mTileStrings.length];
         mCircleYOffsets = new float[mTileStrings.length];
+
+        mShadowOffset = tileSize * 0.04f;
 
         Rect textBounds = new Rect();
         float baseXOffset;
