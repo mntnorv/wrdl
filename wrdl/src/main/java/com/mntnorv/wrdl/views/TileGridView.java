@@ -173,8 +173,8 @@ public class TileGridView extends View {
             // Update text properties
             mTilesSelected[i] = false;
             mTextPaint.getTextBounds(mTileStrings[i], 0, mTileStrings[i].length(), textBounds);
-            mTextXOffsets[i] = baseXOffset + (tileSize - textBounds.right) / 2;
-            mTextYOffsets[i] = baseYOffset + (tileSize + textBounds.bottom - textBounds.top) / 2;
+            mTextXOffsets[i] = baseXOffset + (tileSize - textBounds.right - textBounds.left) / 2;
+            mTextYOffsets[i] = baseYOffset + (tileSize - textBounds.bottom - textBounds.top) / 2;
 
             // Update circle properties
             mCircleXOffsets[i] = baseXOffset + tileSize / 2;

@@ -13,6 +13,9 @@
     <com.mntnorv.wrdl.views.TileGridView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:handleTouchEvents="true" />
+        app:handleTouchEvents="true"
+        app:tileColor="#FF33B5E5"
+        android:textColor="#FF111111"
+        app:shadowColor="#FF333333" />
 
 </LinearLayout>
