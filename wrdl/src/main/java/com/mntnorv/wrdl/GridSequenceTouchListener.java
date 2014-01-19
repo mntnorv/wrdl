@@ -74,10 +74,10 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
             boolean inside = xt >= 0 && xt < columns && yt >= 0 && yt < rows;
 
             if (event.getAction() == MotionEvent.ACTION_DOWN && inside) {
-                selected.add(yt*4 + xt);
+                selected.add(yt*columns + xt);
                 sequenceChanged = true;
                 changeType = ELEMENT_ADDED;
-                elemChanged = yt*4 + xt;
+                elemChanged = yt*columns + xt;
             } else if (event.getAction() == MotionEvent.ACTION_MOVE && inside && selected.size() > 0) {
                 int lastXT = selected.get(0) % columns;
                 int lastYT = selected.get(0) / rows;
@@ -93,7 +93,7 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
                 int dy = Math.abs(lastYT - yt);
 
                 if (!(dx == 0 && dy == 0) && (dx <= 1 && dy <= 1) &&
-                        (((!selected.contains(Integer.valueOf(yt * 4 + xt))) && (selected.size() < rows*columns))
+                        (((!selected.contains(Integer.valueOf(yt * columns + xt))) && (selected.size() < rows*columns))
                                 || (xt == prevXT && yt == prevYT))) {
 
                     float xTile = xt*tileWidth + tileWidth/2;
@@ -103,14 +103,14 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
                     float maxDistance = (tileMinDim*0.9f)/2;
 
                     if (distance < maxDistance * maxDistance) {
-                        if (!selected.contains(Integer.valueOf(yt * 4 + xt))) {
-                            selected.add(0, yt*4 + xt);
+                        if (!selected.contains(Integer.valueOf(yt * columns + xt))) {
+                            selected.add(0, yt*columns + xt);
                             changeType = ELEMENT_ADDED;
-                            elemChanged = yt*4 + xt;
+                            elemChanged = yt*columns + xt;
                         } else {
                             selected.remove(0);
                             changeType = ELEMENT_REMOVED;
-                            elemChanged = lastYT*4 + lastXT;
+                            elemChanged = lastYT*columns + lastXT;
                         }
 
                         sequenceChanged = true;
