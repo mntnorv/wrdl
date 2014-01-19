@@ -8,7 +8,7 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="com.mntnorv.wrdl.GameActivity$PlaceholderFragment">
 
-    <com.mntnorv.wrdl.TileGridView
+    <com.mntnorv.wrdl.views.TileGridView
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

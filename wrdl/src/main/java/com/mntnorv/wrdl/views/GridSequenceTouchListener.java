@@ -1,4 +1,4 @@
-package com.mntnorv.wrdl;
+package com.mntnorv.wrdl.views;
 
 import java.util.ArrayList;
 
@@ -13,6 +13,8 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
     public static final byte SEQUENCE_CLEARED = 0x00;
 
     /* FIELDS */
+    private boolean initialized;
+
     private float width;
     private float height;
 
@@ -27,18 +29,9 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
 	/* CONSTRUCTOR */
     /**
      * Makes a new GridSequenceTouchListener
-     * @param tileWidth - grid tile width
-     * @param tileHeight - grid tile height
-     * @param rows - number of rows in grid
-     * @param columns - number of columns in grid
      */
-    public GridSequenceTouchListener(float tileWidth, float tileHeight, int columns, int rows) {
-        this.tileWidth = tileWidth;
-        this.tileHeight = tileHeight;
-        this.rows = rows;
-        this.columns = columns;
-
-        this.tileMinDim = Math.min(tileWidth, tileHeight);
+    public GridSequenceTouchListener() {
+        initialized = false;
     }
 
 	/* SEQUENCE CHANGED */
@@ -60,6 +53,10 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
     /* ON TOUCH */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+        if (!initialized) {
+            return false;
+        }
+
         if (event.getPointerCount() == 1) {
             boolean sequenceChanged = false;
             byte changeType = SEQUENCE_CLEARED;
@@ -168,5 +165,14 @@ public abstract class GridSequenceTouchListener implements OnTouchListener {
     public void setGridSize(int columns, int rows) {
         setColumns(columns);
         setRows(rows);
+    }
+
+    public void initialize(float width, float height, int columns, int rows) {
+        setWidth(width);
+        setHeight(height);
+        setColumns(columns);
+        setRows(rows);
+
+        initialized = true;
     }
 }
