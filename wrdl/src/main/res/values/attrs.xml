@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TileGridView">
+        <attr name="android:textColor" />
+        <attr name="handleTouchEvents" format="boolean" />
+        <attr name="tileColor" format="color" />
+        <attr name="shadowColor" format="color" />
+    </declare-styleable>
+</resources>

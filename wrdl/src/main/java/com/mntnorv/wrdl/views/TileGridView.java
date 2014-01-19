@@ -1,15 +1,23 @@
 package com.mntnorv.wrdl.views;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.mntnorv.wrdl.R;
+
 import java.util.ArrayList;
 
 public class TileGridView extends View {
+
+    private static final int DEFAULT_TEXT_COLOR = 0xFF000000;
+    private static final int DEFAULT_TILE_COLOR = 0xFFFF0000;
+    private static final int DEFAULT_SHADOW_COLOR = 0xFFCCCCCC;
+    private static final boolean DEFAULT_HANDLE_TOUCH_VALUE = false;
 
     private Paint mTextPaint;
     private Paint mCirclePaint;
@@ -26,33 +34,68 @@ public class TileGridView extends View {
     private int sizeInTiles;
     private float tileSize;
 
+    private boolean mHandleTouch;
+    private int mTextColor;
+    private int mTileColor;
+    private int mShadowColor;
+
     public TileGridView(Context context) {
         super(context);
+        setDefaults();
         init();
     }
 
     public TileGridView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setDefaults();
+        parseAttributes(context, attrs);
         init();
     }
 
-    public TileGridView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
+    private void setDefaults() {
+        mTileColor = DEFAULT_TEXT_COLOR;
+        mTileColor = DEFAULT_TILE_COLOR;
+        mShadowColor = DEFAULT_SHADOW_COLOR;
+        mHandleTouch = DEFAULT_HANDLE_TOUCH_VALUE;
+
+        mTileStrings = new String[] {"Empty"};
+        sizeInTiles = 1;
+    }
+
+    private void parseAttributes(Context context, AttributeSet attrs) {
+        TypedArray a = context.getTheme().obtainStyledAttributes(
+                attrs,
+                R.styleable.TileGridView,
+                0, 0);
+
+        try {
+            mHandleTouch = a.getBoolean(R.styleable.TileGridView_handleTouchEvents, false);
+            mTextColor = a.getColor(R.styleable.TileGridView_android_textColor, 0xFF000000);
+            mTileColor = a.getColor(R.styleable.TileGridView_tileColor, 0xFFFF0000);
+            mShadowColor = a.getColor(R.styleable.TileGridView_shadowColor, 0xFFCCCCCC);
+        } finally {
+            a.recycle();
+        }
     }
 
     private void init() {
         mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-        mTextPaint.setColor(0xFF000000);
+        mTextPaint.setColor(mTextColor);
         mTextPaint.setTextSize(12);
 
         mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mCirclePaint.setColor(0xFFFF0000);
+        mCirclePaint.setColor(mTileColor);
 
-        mTileStrings = new String[] {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"};
+        if (mHandleTouch) {
+            setOnTouchListener(touchListener);
+        }
+    }
+
+    public void setTiles(String[] tiles) {
+        mTileStrings = tiles.clone();
         sizeInTiles = (int) Math.sqrt(mTileStrings.length);
 
-        setOnTouchListener(touchListener);
+        updateDrawableProperties();
     }
 
     private GridSequenceTouchListener touchListener = new GridSequenceTouchListener() {
