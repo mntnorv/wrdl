@@ -46,7 +46,6 @@ public class TileGridView extends View {
             = new ArrayList<IndicatorDrawable>();
     private float mIndicatorHeight;
     private float mIndicatorRotatedLength;
-    private int mLastHighlightedPosition;
 
     // Main view dimensions
     private int mSizeInTiles;
@@ -79,8 +78,6 @@ public class TileGridView extends View {
 
         mTileStrings = new String[] {"A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"};
         mSizeInTiles = 4;
-
-        mLastHighlightedPosition = -1;
 
         setupRotationMatrix();
     }
@@ -159,12 +156,6 @@ public class TileGridView extends View {
                     deselectAllTiles();
                     mIndicatorDrawableList.clear();
                     break;
-            }
-
-            if (sequence.size() >= 1) {
-                mLastHighlightedPosition = sequence.get(0);
-            } else {
-                mLastHighlightedPosition = -1;
             }
         }
     };
