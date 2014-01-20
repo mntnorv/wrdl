@@ -6,7 +6,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.7.+'
-        compile group: 'com.netflix.rxjava', name: 'rxjava-core', version: '0.11.+'
     }
 }
 
