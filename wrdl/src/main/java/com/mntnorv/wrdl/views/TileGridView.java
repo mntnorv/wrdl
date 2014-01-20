@@ -202,12 +202,12 @@ public class TileGridView extends View {
         // Draw selection sequence indicators
         IndicatorDrawable currentDrawable;
 
-        for (int i = 0; i < mIndicatorDrawableList.size(); i++) {
-            currentDrawable = mIndicatorDrawableList.get(i);
+        for (IndicatorDrawable indicatorDrawable : mIndicatorDrawableList) {
+            currentDrawable = indicatorDrawable;
 
             canvas.save();
             canvas.rotate(
-                    mIndicatorDrawableList.get(i).rotation,
+                    indicatorDrawable.rotation,
                     currentDrawable.rectangle.left,
                     currentDrawable.rectangle.top + mIndicatorHeight / 2
             );
