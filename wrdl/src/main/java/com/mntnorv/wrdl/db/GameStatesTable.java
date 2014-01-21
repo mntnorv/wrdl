@@ -10,15 +10,14 @@ public class GameStatesTable {
 	public static final String COLUMN_LETTERS      = "letters";
 	public static final String COLUMN_SIZE         = "size";
 	public static final String COLUMN_GAME_MODE    = "game_mode";
-	public static final String COLUMN_DICTIONARY   = "dictionary";
 	public static final String COLUMN_GUESSED      = "guessed";
 	public static final String COLUMN_WORDS        = "words";
 	public static final String COLUMN_GUESSED_DATA = "guessed_data";
 	public static final String COLUMN_POINTS       = "points";
 
 	public static final String[] ALL_COLUMNS = new String[]{
-			COLUMN_ID, COLUMN_LETTERS, COLUMN_SIZE, COLUMN_GAME_MODE, COLUMN_DICTIONARY,
-			COLUMN_GUESSED, COLUMN_WORDS, COLUMN_GUESSED_DATA,COLUMN_POINTS
+			COLUMN_ID, COLUMN_LETTERS, COLUMN_SIZE, COLUMN_GAME_MODE, COLUMN_GUESSED, COLUMN_WORDS,
+			COLUMN_GUESSED_DATA,COLUMN_POINTS
 	};
 
 	// Database creation SQL statement

@@ -9,6 +9,16 @@ public enum GameMode {
 		this.id = id;
 	}
 
+	public static GameMode fromId(int id) {
+		for (GameMode mode : GameMode.values()) {
+			if (mode.getId() == id) {
+				return mode;
+			}
+		}
+
+		return null;
+	}
+
 	public int getId() {
 		return id;
 	}
