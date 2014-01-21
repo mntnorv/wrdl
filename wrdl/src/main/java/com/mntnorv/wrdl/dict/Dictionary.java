@@ -16,21 +16,25 @@ public class Dictionary {
 
 	public Dictionary(InputStream stream) throws IOException {
 		BufferedInputStream bufStream = new BufferedInputStream(stream);
-		mWordList = new ArrayList<byte[]>(200000);
+		mWordList = new ArrayList<byte[]>();
 
 		readWords(bufStream);
 	}
 
 	private void readWords(BufferedInputStream inputStream) throws IOException {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		byte[] readBuffer = new byte[1024];
 
-		int byteRead;
-		while ((byteRead = inputStream.read()) != -1) {
-			if (byteRead != '\n') {
-				outputStream.write(byteRead);
-			} else {
-				mWordList.add(outputStream.toByteArray());
-				outputStream.reset();
+		int bytesRead;
+		while (inputStream.available() > 0) {
+			bytesRead = inputStream.read(readBuffer);
+			for (int i = 0; i < bytesRead; i++) {
+				if (readBuffer[i] != '\n') {
+					outputStream.write(readBuffer[i]);
+				} else {
+					mWordList.add(outputStream.toByteArray());
+					outputStream.reset();
+				}
 			}
 		}
 
