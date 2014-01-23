@@ -16,10 +16,9 @@ import rx.Observable;
 public abstract class AbstractDatabaseSource<T> extends DatabaseSource<T> implements EditableDataSource<T> {
 	private ContentResolver mContentResolver;
 
-	public AbstractDatabaseSource(Context context, LoaderManager loaderManager,
-					  ContentResolver contentResolver) {
+	public AbstractDatabaseSource(Context context, LoaderManager loaderManager) {
 		super(context, loaderManager);
-		mContentResolver = contentResolver;
+		mContentResolver = context.getContentResolver();
 	}
 
 	@Override

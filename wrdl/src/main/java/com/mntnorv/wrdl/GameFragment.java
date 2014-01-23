@@ -2,16 +2,21 @@ package com.mntnorv.wrdl;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.mntnorv.wrdl.db.GameStateSource;
 import com.mntnorv.wrdl.dict.Dictionary;
 import com.mntnorv.wrdl.dict.DictionaryProvider;
 import com.mntnorv.wrdl.dict.LetterGrid;
 
+import java.util.List;
+
 import rx.Observer;
 import rx.concurrency.Schedulers;
+import rx.util.functions.Action1;
 
 public class GameFragment extends Fragment {
 	public GameFragment() {
@@ -26,6 +31,17 @@ public class GameFragment extends Fragment {
 				.subscribeOn(Schedulers.newThread())
 				.observeOn(Schedulers.currentThread())
 				.subscribe(new DictionaryObserver());
+
+		new GameStateSource(getActivity(), getLoaderManager())
+				.getAllItems()
+				.subscribeOn(Schedulers.newThread())
+				.observeOn(Schedulers.currentThread())
+				.subscribe(new Action1<List<GameState>>() {
+					@Override
+					public void call(List<GameState> gameStates) {
+						Log.d("GameStates", Integer.toString(gameStates.size()));
+					}
+				});
 
 		return rootView;
 	}

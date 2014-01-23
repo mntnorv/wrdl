@@ -85,10 +85,6 @@ public class LetterGrid {
 
 		Log.d("LetterGrid", Integer.toString(words.size()));
 
-		for (String word : words) {
-			Log.d("LetterGrid", word);
-		}
-
 		return words;
 	}
 

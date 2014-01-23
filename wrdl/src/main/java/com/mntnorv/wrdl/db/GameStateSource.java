@@ -1,7 +1,6 @@
 package com.mntnorv.wrdl.db;
 
 import android.app.LoaderManager;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -11,8 +10,8 @@ import android.os.Bundle;
 import com.mntnorv.wrdl.GameState;
 
 public class GameStateSource extends AbstractDatabaseSource<GameState> {
-	public GameStateSource(Context context, LoaderManager loaderManager, ContentResolver contentResolver) {
-		super(context, loaderManager, contentResolver);
+	public GameStateSource(Context context, LoaderManager loaderManager) {
+		super(context, loaderManager);
 	}
 
 	@Override
