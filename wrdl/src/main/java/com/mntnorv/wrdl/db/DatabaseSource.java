@@ -15,8 +15,11 @@ import java.util.List;
 import rx.Observable;
 import rx.subjects.PublishSubject;
 
-public abstract class BaseDatabaseSource<T> {
+public abstract class DatabaseSource<T> {
 	protected static final String ITEM_ID_KEY = "itemId";
+	protected static final String ITEM_COUNT_KEY = "itemCount";
+	protected static final String FIRST_ITEM_KEY = "firstItem";
+	protected static final String ORDER_BY_KEY = "orderBy";
 
 	private Context mContext;
 	private LoaderManager mLoaderManager;
@@ -28,7 +31,7 @@ public abstract class BaseDatabaseSource<T> {
 	SparseArray<PublishSubject<List<T>>> listeners =
 			new SparseArray<PublishSubject<List<T>>>();
 
-	public BaseDatabaseSource(Context context, LoaderManager loaderManager) {
+	public DatabaseSource(Context context, LoaderManager loaderManager) {
 		MIN_LOADER_ID = LoaderIdManager.getNextId();
 		MAX_LOADER_ID = MIN_LOADER_ID + LoaderIdManager.getMaxIdsPerLoader();
 		nextId = MIN_LOADER_ID;
@@ -73,6 +76,32 @@ public abstract class BaseDatabaseSource<T> {
 		return nextValidId;
 	}
 
+	private String getLimitStringFromBundle(Bundle args) {
+		StringBuilder limitString = new StringBuilder();
+
+		if (args.containsKey(ITEM_COUNT_KEY)) {
+			limitString
+					.append("LIMIT ")
+					.append(args.getInt(ITEM_COUNT_KEY));
+		}
+
+		if (args.containsKey(FIRST_ITEM_KEY)) {
+			if (limitString.length() > 0) {
+				limitString.append(" ");
+			}
+
+			limitString
+					.append("OFFSET ")
+					.append(args.getInt(FIRST_ITEM_KEY));
+		}
+
+		if (limitString.length() > 0) {
+			return limitString.toString();
+		} else {
+			return null;
+		}
+	}
+
 	//================================================================================
 	// Getters
 	//================================================================================
@@ -105,15 +134,17 @@ public abstract class BaseDatabaseSource<T> {
 	 */
 	protected abstract Uri getItemUri(int id);
 
+	//================================================================================
+	// Overridable protected methods
+	//================================================================================
+
 	/**
 	 * Get all columns names to load for this data.
 	 * @return an array of column names to load
 	 */
-	protected abstract String[] getDataColumns();
-
-	//================================================================================
-	// Overridable protected methods
-	//================================================================================
+	protected String[] getDataColumns() {
+		return null;
+	}
 
 	/**
 	 * Get selection string from the bundle passed to a loader.
@@ -152,10 +183,27 @@ public abstract class BaseDatabaseSource<T> {
 		@Override
 		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 			Uri uri = getBaseUri();
+			String sortLimitString = null;
 
 			if (args != null) {
 				if (args.containsKey(ITEM_ID_KEY)) {
 					uri = getItemUri(args.getInt(ITEM_ID_KEY));
+				} else {
+					sortLimitString = "";
+					String sortOrder = getSortOrderFromBundle(args);
+					String limitString = getLimitStringFromBundle(args);
+
+					if (sortOrder != null) {
+						sortLimitString += sortOrder;
+					}
+
+					if (limitString != null) {
+						sortLimitString += limitString;
+					}
+
+					if (sortLimitString.equals("")) {
+						sortLimitString = null;
+					}
 				}
 			}
 
@@ -165,7 +213,8 @@ public abstract class BaseDatabaseSource<T> {
 					getDataColumns(),
 					getSelectionFromBundle(args),
 					getSelectionArgsFromBundle(args),
-					getSortOrderFromBundle(args));
+					sortLimitString
+			);
 
 			return cursorLoader;
 		}
