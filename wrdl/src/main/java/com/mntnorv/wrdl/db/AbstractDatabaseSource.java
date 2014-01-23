@@ -19,7 +19,6 @@ public abstract class AbstractDatabaseSource<T> extends DatabaseSource<T> implem
 	public AbstractDatabaseSource(Context context, LoaderManager loaderManager,
 					  ContentResolver contentResolver) {
 		super(context, loaderManager);
-
 		mContentResolver = contentResolver;
 	}
 

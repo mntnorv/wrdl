@@ -186,7 +186,7 @@ public class GameState {
 		return values;
 	}
 
-	public static GameState createFromCursor(Cursor cursor) {
+	public static GameState fromCursor(Cursor cursor) {
 		int idIndex = cursor.getColumnIndex(GameStatesTable.COLUMN_ID);
 		int sizeIndex = cursor.getColumnIndexOrThrow(GameStatesTable.COLUMN_SIZE);
 		int lettersIndex = cursor.getColumnIndexOrThrow(GameStatesTable.COLUMN_LETTERS);

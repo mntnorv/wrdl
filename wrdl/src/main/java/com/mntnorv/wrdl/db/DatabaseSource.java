@@ -152,7 +152,7 @@ public abstract class DatabaseSource<T> {
 	 * @return the selection string if it exists in the arguments,
 	 * {@code null} otherwise
 	 */
-	protected String getSelectionFromBundle(Bundle args) {
+	protected String getSelection(Bundle args) {
 		return null;
 	}
 
@@ -162,7 +162,7 @@ public abstract class DatabaseSource<T> {
 	 * @return the selection argument array if it exists in the arguments,
 	 * {@code null} otherwise
 	 */
-	protected String[] getSelectionArgsFromBundle(Bundle args) {
+	protected String[] getSelectionArgs(Bundle args) {
 		return null;
 	}
 
@@ -172,7 +172,7 @@ public abstract class DatabaseSource<T> {
 	 * @return the sort order if it exists in the arguments,
 	 * {@code null} otherwise
 	 */
-	protected String getSortOrderFromBundle(Bundle args) {
+	protected String getSortOrder(Bundle args) {
 		return null;
 	}
 
@@ -190,7 +190,7 @@ public abstract class DatabaseSource<T> {
 					uri = getItemUri(args.getInt(ITEM_ID_KEY));
 				} else {
 					sortLimitString = "";
-					String sortOrder = getSortOrderFromBundle(args);
+					String sortOrder = getSortOrder(args);
 					String limitString = getLimitStringFromBundle(args);
 
 					if (sortOrder != null) {
@@ -211,8 +211,8 @@ public abstract class DatabaseSource<T> {
 					mContext,
 					uri,
 					getDataColumns(),
-					getSelectionFromBundle(args),
-					getSelectionArgsFromBundle(args),
+					getSelection(args),
+					getSelectionArgs(args),
 					sortLimitString
 			);
 
