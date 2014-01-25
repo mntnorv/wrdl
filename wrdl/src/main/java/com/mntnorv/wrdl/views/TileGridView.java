@@ -18,14 +18,14 @@ public class TileGridView extends View {
 
 	// Static
 	private static final int DEFAULT_TEXT_COLOR = 0xFF000000;
-	private static final int DEFAULT_TILE_COLOR = 0xFFFF0000;
-	private static final int DEFAULT_SHADOW_COLOR = 0xFFCCCCCC;
+	private static final int DEFAULT_SELECTED_TEXT_COLOR = 0xFFFFFFFF;
+	private static final int DEFAULT_INDICATOR_COLOR = 0xFFFF0000;
 	private static final boolean DEFAULT_HANDLE_TOUCH_VALUE = false;
 
 	// Paints
 	private Paint mTextPaint;
-	private Paint mCirclePaint;
-	private Paint mShadowPaint;
+	private Paint mSelectedTextPaint;
+	private Paint mIndicatorPaint;
 
 	// Text specific
 	private float[] mTextXOffsets;
@@ -38,10 +38,8 @@ public class TileGridView extends View {
 	private float[] mCircleYOffsets;
 	private float mCircleRadius;
 
-	private float mShadowOffset;
-
 	// Indicator specific
-	private float[] mIndicatorRotationMatrix;
+	private int[] mRotationLookupMatrix;
 	private List<IndicatorDrawable> mIndicatorDrawableList
 			= new ArrayList<IndicatorDrawable>();
 	private float mIndicatorHeight;
@@ -54,8 +52,8 @@ public class TileGridView extends View {
 	// Attributes parsed from XML
 	private boolean mHandleTouch;
 	private int mTextColor;
-	private int mTileColor;
-	private int mShadowColor;
+	private int mSelectedTextColor;
+	private int mIndicatorColor;
 
 	public TileGridView(Context context) {
 		super(context);
@@ -71,30 +69,21 @@ public class TileGridView extends View {
 	}
 
 	private void setDefaults() {
-		mTileColor = DEFAULT_TEXT_COLOR;
-		mTileColor = DEFAULT_TILE_COLOR;
-		mShadowColor = DEFAULT_SHADOW_COLOR;
+		mTextColor = DEFAULT_TEXT_COLOR;
+		mSelectedTextColor = DEFAULT_SELECTED_TEXT_COLOR;
+		mIndicatorColor = DEFAULT_INDICATOR_COLOR;
 		mHandleTouch = DEFAULT_HANDLE_TOUCH_VALUE;
 
 		mTileStrings = new String[]{"A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"};
 		mSizeInTiles = 4;
 
-		setupRotationMatrix();
+		setupRotationMatrices();
 	}
 
-	private void setupRotationMatrix() {
-		mIndicatorRotationMatrix = new float[9];
-		mIndicatorRotationMatrix[4] = 0; // center
-
-		mIndicatorRotationMatrix[1] = 90; // top
-		mIndicatorRotationMatrix[7] = -90; // bottom
-		mIndicatorRotationMatrix[3] = 0; // left
-		mIndicatorRotationMatrix[5] = 180; // right
-
-		mIndicatorRotationMatrix[0] = 45;       // top left
-		mIndicatorRotationMatrix[2] = -45 + 180; // top right
-		mIndicatorRotationMatrix[6] = -45;       // bottom left
-		mIndicatorRotationMatrix[8] = 45 - 180; // bottom right
+	private void setupRotationMatrices() {
+		mRotationLookupMatrix = new int[] {
+			7, 0, 1, 6, 0, 2, 5, 4, 3
+		};
 	}
 
 	private void parseAttributes(Context context, AttributeSet attrs) {
@@ -104,10 +93,10 @@ public class TileGridView extends View {
 				0, 0);
 
 		try {
-			mHandleTouch = a.getBoolean(R.styleable.TileGridView_handleTouchEvents, false);
-			mTextColor = a.getColor(R.styleable.TileGridView_android_textColor, 0xFF000000);
-			mTileColor = a.getColor(R.styleable.TileGridView_tileColor, 0xFFFF0000);
-			mShadowColor = a.getColor(R.styleable.TileGridView_shadowColor, 0xFFCCCCCC);
+			mHandleTouch = a.getBoolean(R.styleable.TileGridView_handleTouchEvents, DEFAULT_HANDLE_TOUCH_VALUE);
+			mTextColor = a.getColor(R.styleable.TileGridView_android_textColor, DEFAULT_TEXT_COLOR);
+			mSelectedTextColor = a.getColor(R.styleable.TileGridView_selectedTextColor, DEFAULT_SELECTED_TEXT_COLOR);
+			mIndicatorColor = a.getColor(R.styleable.TileGridView_indicatorColor, DEFAULT_INDICATOR_COLOR);
 		} finally {
 			a.recycle();
 		}
@@ -118,11 +107,12 @@ public class TileGridView extends View {
 		mTextPaint.setColor(mTextColor);
 		mTextPaint.setTextSize(12);
 
-		mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-		mCirclePaint.setColor(mTileColor);
+		mSelectedTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+		mSelectedTextPaint.setColor(mSelectedTextColor);
+		mSelectedTextPaint.setTextSize(12);
 
-		mShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-		mShadowPaint.setColor(mShadowColor);
+		mIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		mIndicatorPaint.setColor(mIndicatorColor);
 
 		if (mHandleTouch) {
 			setOnTouchListener(touchListener);
@@ -181,38 +171,51 @@ public class TileGridView extends View {
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 
-		// Draw selection indicator shadows
-		drawSelectionIndicators(canvas, mShadowPaint, mShadowOffset);
-
 		// Draw selection indicators
-		drawSelectionIndicators(canvas, mCirclePaint, 0);
+		drawSelectionIndicators(canvas, mIndicatorPaint);
 
 		// Draw text
 		for (int i = 0; i < mTileStrings.length; i++) {
-			canvas.drawText(mTileStrings[i], mTextXOffsets[i], mTextYOffsets[i], mTextPaint);
+			if (!mTilesSelected[i]) {
+				canvas.drawText(mTileStrings[i], mTextXOffsets[i], mTextYOffsets[i], mTextPaint);
+			} else {
+				canvas.drawText(mTileStrings[i], mTextXOffsets[i], mTextYOffsets[i], mSelectedTextPaint);
+			}
 		}
 	}
 
-	private void drawSelectionIndicators(Canvas canvas, Paint indicatorPaint, float offset) {
-		if (offset != 0) {
-			canvas.save();
-			canvas.translate(offset, offset);
-		}
-
-		// Draw selection sequence indicators
-		IndicatorDrawable currentDrawable;
-
+	private void drawSelectionIndicators(Canvas canvas, Paint indicatorPaint) {
 		for (IndicatorDrawable indicatorDrawable : mIndicatorDrawableList) {
-			currentDrawable = indicatorDrawable;
+			// Draw the line
+			canvas.save();
+			canvas.rotate(
+					indicatorDrawable.lineRotation,
+					indicatorDrawable.lineRectangle.left,
+					indicatorDrawable.lineRectangle.top + mIndicatorHeight / 2
+			);
+
+			canvas.drawRect(indicatorDrawable.lineRectangle, indicatorPaint);
+			canvas.restore();
+
+			// Draw the pointy ends
+			canvas.save();
+			canvas.rotate(
+					indicatorDrawable.pointyRectFromRotation,
+					indicatorDrawable.pointyRectangleFrom.left,
+					indicatorDrawable.pointyRectangleFrom.top
+			);
+
+			canvas.drawRect(indicatorDrawable.pointyRectangleFrom, indicatorPaint);
+			canvas.restore();
 
 			canvas.save();
 			canvas.rotate(
-					indicatorDrawable.rotation,
-					currentDrawable.rectangle.left,
-					currentDrawable.rectangle.top + mIndicatorHeight / 2
+					indicatorDrawable.pointyRectToRotation,
+					indicatorDrawable.pointyRectangleTo.left,
+					indicatorDrawable.pointyRectangleTo.top
 			);
 
-			canvas.drawRect(currentDrawable.rectangle, indicatorPaint);
+			canvas.drawRect(indicatorDrawable.pointyRectangleTo, indicatorPaint);
 			canvas.restore();
 		}
 
@@ -222,26 +225,21 @@ public class TileGridView extends View {
 				canvas.drawCircle(mCircleXOffsets[i], mCircleYOffsets[i], mCircleRadius, indicatorPaint);
 			}
 		}
-
-		if (offset != 0) {
-			canvas.restore();
-		}
 	}
 
 	private void updateDrawableProperties() {
 		touchListener.initialize(getWidth(), getHeight(), mSizeInTiles, mSizeInTiles);
 
 		mTextPaint.setTextSize(mTileSize * 0.3f);
+		mSelectedTextPaint.setTextSize(mTileSize * 0.3f);
 
 		mTextXOffsets = new float[mTileStrings.length];
 		mTextYOffsets = new float[mTileStrings.length];
 		mTilesSelected = new boolean[mTileStrings.length];
 
-		mCircleRadius = mTileSize * 0.8f / 2;
+		mCircleRadius = mTileSize * 0.6f / 2;
 		mCircleXOffsets = new float[mTileStrings.length];
 		mCircleYOffsets = new float[mTileStrings.length];
-
-		mShadowOffset = mTileSize * 0.04f;
 
 		mIndicatorHeight = mTileSize * 0.1f;
 		mIndicatorRotatedLength = (float) Math.sqrt(mTileSize * mTileSize * 2);
@@ -283,6 +281,11 @@ public class TileGridView extends View {
 		invalidate();
 	}
 
+	private int getRotation(int dX, int dY, int offset) {
+		int matrixPosition = (dY + 1) * 3 + dX + 1;
+		return ((mRotationLookupMatrix[matrixPosition] + offset) % 8) * 45;
+	}
+
 	/**
 	 * Adds an indicator to the View.
 	 * Both {@code toCol} and {@code toRow} can't be equal to {@code fromCol} and
@@ -301,6 +304,8 @@ public class TileGridView extends View {
 		int dY = fromRow - toRow;
 
 		float x, y, w, h;
+
+		// Indicator line
 		h = mIndicatorHeight;
 
 		if (dX != 0 && dY != 0) {
@@ -312,19 +317,43 @@ public class TileGridView extends View {
 		x = fromCol * mTileSize + mTileSize / 2;
 		y = fromRow * mTileSize + mTileSize / 2 - h / 2;
 
+		RectF lineRect = new RectF(x, y, x + w, y + h);
+
+		// Indicator pointy ends
+		y = fromRow * mTileSize + mTileSize / 2;
+		RectF pointyRectFrom = new RectF(x, y, x + mCircleRadius, y + mCircleRadius);
+
+		x = toCol * mTileSize + mTileSize / 2;
+		y = toRow * mTileSize + mTileSize / 2;
+		RectF pointyRectTo = new RectF(x, y, x + mCircleRadius, y + mCircleRadius);
+
 		mIndicatorDrawableList.add(0, new IndicatorDrawable(
-				mIndicatorRotationMatrix[(dY + 1) * 3 + dX + 1],
-				new RectF(x, y, x + w, y + h)
+				getRotation(dX, dY, 2),
+				lineRect,
+				getRotation(dX, dY, 1),
+				pointyRectFrom,
+				getRotation(dX, dY, 5),
+				pointyRectTo
 		));
 	}
 
 	private class IndicatorDrawable {
-		public float rotation;
-		public RectF rectangle;
+		public int lineRotation;
+		public int pointyRectFromRotation;
+		public int pointyRectToRotation;
+		public RectF lineRectangle;
+		public RectF pointyRectangleFrom;
+		public RectF pointyRectangleTo;
 
-		private IndicatorDrawable(float rotation, RectF rectangle) {
-			this.rotation = rotation;
-			this.rectangle = rectangle;
+		private IndicatorDrawable(int lineRotation, RectF lineRectangle,
+								  int pointyRectRotation,RectF pointyRectangleFrom,
+								  int pointyRectToRotation, RectF pointyRectangleTo) {
+			this.lineRotation = lineRotation;
+			this.lineRectangle = lineRectangle;
+			this.pointyRectFromRotation = pointyRectRotation;
+			this.pointyRectangleFrom = pointyRectangleFrom;
+			this.pointyRectToRotation = pointyRectToRotation;
+			this.pointyRectangleTo = pointyRectangleTo;
 		}
 	}
 }

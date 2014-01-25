@@ -3,7 +3,7 @@
     <declare-styleable name="TileGridView">
         <attr name="android:textColor" />
         <attr name="handleTouchEvents" format="boolean" />
-        <attr name="tileColor" format="color" />
-        <attr name="shadowColor" format="color" />
+        <attr name="indicatorColor" format="color" />
+        <attr name="selectedTextColor" format="color" />
     </declare-styleable>
 </resources>
