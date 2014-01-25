@@ -74,7 +74,7 @@ public class TileGridView extends View {
 		mIndicatorColor = DEFAULT_INDICATOR_COLOR;
 		mHandleTouch = DEFAULT_HANDLE_TOUCH_VALUE;
 
-		mTileStrings = new String[]{"A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"};
+		mTileStrings = new String[]{"A", "A", "A", "A", "A", "Qu", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"};
 		mSizeInTiles = 4;
 
 		setupRotationMatrices();
@@ -237,7 +237,7 @@ public class TileGridView extends View {
 		mTextYOffsets = new float[mTileStrings.length];
 		mTilesSelected = new boolean[mTileStrings.length];
 
-		mCircleRadius = mTileSize * 0.6f / 2;
+		mCircleRadius = mTileSize * 0.5f / 2;
 		mCircleXOffsets = new float[mTileStrings.length];
 		mCircleYOffsets = new float[mTileStrings.length];
 
