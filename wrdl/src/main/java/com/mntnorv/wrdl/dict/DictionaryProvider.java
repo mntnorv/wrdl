@@ -9,26 +9,24 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.subscriptions.Subscriptions;
-import rx.util.functions.Func1;
 
 public class DictionaryProvider {
 	private static Dictionary dict;
 	private static int mOpenedDict = 0;
 
 	public static Observable<Dictionary> getDictionary(final Context context, final int resourceId) {
-		return Observable.create(new Func1<Observer<Dictionary>, Subscription>() {
+		return Observable.create(new Observable.OnSubscribeFunc<Dictionary>() {
 			@Override
-			public Subscription call(Observer<Dictionary> dictionaryObserver) {
-
+			public Subscription onSubscribe(Observer<? super Dictionary> observer) {
 				try {
 					if (mOpenedDict != resourceId) {
 						dict = openDictionary(context, resourceId);
 					}
 
-					dictionaryObserver.onNext(dict);
-					dictionaryObserver.onCompleted();
+					observer.onNext(dict);
+					observer.onCompleted();
 				} catch (IOException e) {
-					dictionaryObserver.onError(e);
+					observer.onError(e);
 				}
 
 				return Subscriptions.empty();

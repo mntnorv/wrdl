@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.mntnorv.wrdl.db.GameStateSource;
 import com.mntnorv.wrdl.dict.Dictionary;
@@ -15,6 +16,7 @@ import com.mntnorv.wrdl.dict.LetterGrid;
 import java.util.List;
 
 import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.concurrency.Schedulers;
 import rx.util.functions.Action1;
 
@@ -29,7 +31,7 @@ public class GameFragment extends Fragment {
 
 		DictionaryProvider.getDictionary(getActivity(), R.raw.sowpods3)
 				.subscribeOn(Schedulers.newThread())
-				.observeOn(Schedulers.currentThread())
+				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(new DictionaryObserver());
 
 		new GameStateSource(getActivity(), getLoaderManager())
@@ -49,8 +51,13 @@ public class GameFragment extends Fragment {
 	private class DictionaryObserver implements Observer<Dictionary> {
 		@Override
 		public void onNext(Dictionary dictionary) {
-			new LetterGrid(new String[]{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"}, 4, 4)
-				.getWordsInGrid(dictionary);
+			Toast.makeText(
+					getActivity().getApplicationContext(),
+					Integer.toString(
+						new LetterGrid(new String[]{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"}, 4, 4).getWordsInGrid(dictionary).size()
+					),
+					Toast.LENGTH_SHORT
+			).show();
 		}
 
 		@Override
