@@ -3,10 +3,13 @@ package com.mntnorv.wrdl.views;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.FloatMath;
 import android.view.View;
 
 import com.mntnorv.wrdl.R;
@@ -44,6 +47,8 @@ public class TileGridView extends View {
 			= new ArrayList<IndicatorDrawable>();
 	private float mIndicatorHeight;
 	private float mIndicatorRotatedLength;
+	private float mRoundSize;
+	private float mTileDiagonal;
 
 	// Main view dimensions
 	private int mSizeInTiles;
@@ -185,6 +190,8 @@ public class TileGridView extends View {
 	}
 
 	private void drawSelectionIndicators(Canvas canvas, Paint indicatorPaint) {
+		Matrix matrix = new Matrix();
+
 		for (IndicatorDrawable indicatorDrawable : mIndicatorDrawableList) {
 			// Draw the line
 			canvas.save();
@@ -217,6 +224,10 @@ public class TileGridView extends View {
 
 			canvas.drawRect(indicatorDrawable.pointyRectangleTo, indicatorPaint);
 			canvas.restore();
+
+			// Draw rounded paths
+			canvas.drawPath(indicatorDrawable.roundedPathFrom, indicatorPaint);
+			canvas.drawPath(indicatorDrawable.roundedPathTo, indicatorPaint);
 		}
 
 		// Draw selection circles
@@ -230,30 +241,38 @@ public class TileGridView extends View {
 	private void updateDrawableProperties() {
 		touchListener.initialize(getWidth(), getHeight(), mSizeInTiles, mSizeInTiles);
 
+		// Update paints
 		mTextPaint.setTextSize(mTileSize * 0.3f);
 		mSelectedTextPaint.setTextSize(mTileSize * 0.3f);
 
-		mTextXOffsets = new float[mTileStrings.length];
-		mTextYOffsets = new float[mTileStrings.length];
-		mTilesSelected = new boolean[mTileStrings.length];
-
-		mCircleRadius = mTileSize * 0.5f / 2;
+		// Create new offset arrays
+		mTextXOffsets   = new float[mTileStrings.length];
+		mTextYOffsets   = new float[mTileStrings.length];
 		mCircleXOffsets = new float[mTileStrings.length];
 		mCircleYOffsets = new float[mTileStrings.length];
 
-		mIndicatorHeight = mTileSize * 0.1f;
-		mIndicatorRotatedLength = (float) Math.sqrt(mTileSize * mTileSize * 2);
+		// Create new selection array
+		mTilesSelected = new boolean[mTileStrings.length];
 
+		// Calculate various sizes
+		mCircleRadius           = mTileSize * 0.5f / 2;
+		mIndicatorHeight        = mTileSize * 0.1f;
+		mIndicatorRotatedLength = (float) Math.sqrt(mTileSize * mTileSize * 2);
+		mRoundSize              = mCircleRadius / 5;
+		mTileDiagonal           = FloatMath.sqrt(2 * mCircleRadius * mCircleRadius);
+
+		// Prepare for offset calculation
 		Rect textBounds = new Rect();
 		float baseXOffset;
 		float baseYOffset;
 
+		// Calculate all of the offsets
 		for (int i = 0; i < mTileStrings.length; i++) {
 			baseXOffset = mTileSize * (i % mSizeInTiles);
 			baseYOffset = mTileSize * (i / mSizeInTiles);
+			mTilesSelected[i] = false;
 
 			// Update text properties
-			mTilesSelected[i] = false;
 			mTextPaint.getTextBounds(mTileStrings[i], 0, mTileStrings[i].length(), textBounds);
 			mTextXOffsets[i] = baseXOffset + (mTileSize - textBounds.right - textBounds.left) / 2;
 			mTextYOffsets[i] = baseYOffset + (mTileSize - textBounds.bottom - textBounds.top) / 2;
@@ -262,6 +281,46 @@ public class TileGridView extends View {
 			mCircleXOffsets[i] = baseXOffset + mTileSize / 2;
 			mCircleYOffsets[i] = baseYOffset + mTileSize / 2;
 		}
+	}
+
+	private Path getRoundedPath(int row, int column, int dX, int dY) {
+		float sqrt2 = FloatMath.sqrt(2);
+		float circleX = (1 + sqrt2) * mRoundSize;
+		float circleRadius = (2 + sqrt2) * mRoundSize;
+		int position = row * mSizeInTiles + column;
+		Matrix transformation = new Matrix();
+		Path roundedPath = new Path();
+
+		roundedPath.moveTo(0, 0);
+		roundedPath.arcTo(new RectF(
+				circleX - circleRadius,
+				mRoundSize - circleRadius * 2,
+				circleX + circleRadius,
+				mRoundSize
+		), 135, -45);
+		roundedPath.lineTo(circleX, mRoundSize + mIndicatorHeight);
+		roundedPath.arcTo(new RectF(
+				circleX - circleRadius,
+				mRoundSize + mIndicatorHeight,
+				circleX + circleRadius,
+				mRoundSize + mIndicatorHeight + circleRadius * 2
+		), 270, -45);
+		roundedPath.close();
+
+		transformation.setTranslate(
+				mCircleXOffsets[position] + mTileDiagonal - mIndicatorHeight,
+				mCircleYOffsets[position] - mRoundSize - (mIndicatorHeight / 2)
+		);
+
+		transformation.postRotate(
+				getRotation(dX, dY, 2),
+				mCircleXOffsets[position],
+				mCircleYOffsets[position]
+		);
+
+		roundedPath.transform(transformation);
+
+		return roundedPath;
 	}
 
 	private void selectTile(int position) {
@@ -286,14 +345,6 @@ public class TileGridView extends View {
 		return ((mRotationLookupMatrix[matrixPosition] + offset) % 8) * 45;
 	}
 
-	/**
-	 * Adds an indicator to the View.
-	 * Both {@code toCol} and {@code toRow} can't be equal to {@code fromCol} and
-	 * {@code fromRow}.
-	 *
-	 * @param fromPos - indicator start tile position
-	 * @param toPos   - indicator end tile position
-	 */
 	private void addIndicator(int fromPos, int toPos) {
 		int fromCol = fromPos % mSizeInTiles;
 		int fromRow = fromPos / mSizeInTiles;
@@ -327,14 +378,18 @@ public class TileGridView extends View {
 		y = toRow * mTileSize + mTileSize / 2;
 		RectF pointyRectTo = new RectF(x, y, x + mCircleRadius, y + mCircleRadius);
 
-		mIndicatorDrawableList.add(0, new IndicatorDrawable(
-				getRotation(dX, dY, 2),
-				lineRect,
-				getRotation(dX, dY, 1),
-				pointyRectFrom,
-				getRotation(dX, dY, 5),
-				pointyRectTo
-		));
+		// Generate an indicator drawable
+		IndicatorDrawable indicator = new IndicatorDrawable();
+		indicator.lineRectangle          = lineRect;
+		indicator.lineRotation           = getRotation(dX, dY, 2);
+		indicator.pointyRectangleFrom    = pointyRectFrom;
+		indicator.pointyRectFromRotation = getRotation(dX, dY, 1);
+		indicator.pointyRectangleTo      = pointyRectTo;
+		indicator.pointyRectToRotation   = getRotation(dX, dY, 5);
+		indicator.roundedPathFrom        = getRoundedPath(fromRow, fromCol, dX, dY);
+		indicator.roundedPathTo          = getRoundedPath(toRow, toCol, -dX, -dY);
+
+		mIndicatorDrawableList.add(0, indicator);
 	}
 
 	private class IndicatorDrawable {
@@ -344,16 +399,7 @@ public class TileGridView extends View {
 		public RectF lineRectangle;
 		public RectF pointyRectangleFrom;
 		public RectF pointyRectangleTo;
-
-		private IndicatorDrawable(int lineRotation, RectF lineRectangle,
-								  int pointyRectRotation,RectF pointyRectangleFrom,
-								  int pointyRectToRotation, RectF pointyRectangleTo) {
-			this.lineRotation = lineRotation;
-			this.lineRectangle = lineRectangle;
-			this.pointyRectFromRotation = pointyRectRotation;
-			this.pointyRectangleFrom = pointyRectangleFrom;
-			this.pointyRectToRotation = pointyRectToRotation;
-			this.pointyRectangleTo = pointyRectangleTo;
-		}
+		public Path roundedPathTo;
+		public Path roundedPathFrom;
 	}
 }
